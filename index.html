@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> Shoot the Ship v.1</title>
+
+<style>
+canvas{
+ background-color: rgb(255, 255, 255);
+ border: 1px solid rgb(0, 0, 0)
+}
+
+</style>
+<script>
+
+class GraphObj 
+{
+	constructor(x, y, w, h) 
+	{
+  		this.x = x;
+  		this.y = y;
+  		this.w = w;
+  		this.h = h;
+	}
+
+ 	info() 
+ 	{
+  		return "\ngraphical object: x="+this.x + ", y="+this.y+", w="+this.w+", h="+this.h;
+ 	}
+}
+
+
+// variables
+
+var width=-50;
+var height=-60;
+
+var mList = 2; 
+var tList = 2;
+var h1    = 5; 		//höhe Torpedo
+var h2    =40; 		//höhe Ship(gegner)
+
+var ref_time=0;
+var x5=4;			// define "lives" at the begining to 4 lives 
+var hv=2; 			//Hauptversion 
+var nv=1;			//Nebenversion 
+var na1=01;			//Name 1
+var na2=01;			//Name 2 
+var l=0;			//define "Hits" at the begining to 0
+
+
+
+function main()
+{
+
+	var ele = document.getElementById("background");
+	var ctx= ele.getContext("2d");
+	
+	ele.width = ele.width;
+
+	var n_v = ele.width; 
+	var n_h = ele.height; 
+
+	ctx.strokeStyle="#ddd";
+	ctx.stroke();
+
+	//background Lv1
+	var img=document.getElementById("bg");
+	ctx.drawImage(img,-100,0,1000,600);
+
+	//Player (Spieler)
+	var img= document.getElementById("Player");
+	ctx.drawImage(img,70,y,width,height);
+
+	//Ships (Gegner)
+	var img1= document.getElementById("ship");
+
+
+	for (var i=0; i<mList.length; i++)
+	{
+		
+		var o = mList[i];
+		ctx.drawImage(img1,o.x,o.y,o.w,o.h);
+		
+	}
+	// draw torpedos
+	for (var i=0; i<tList.length; i++)
+	{
+
+		ctx.fillStyle = "red";
+		var o = tList[i];
+		ctx.fillRect(o.x,o.y,o.w,o.h);
+
+	}
+	//Leben
+	ctx.font = "italic small-caps bold 30px Helvetica, Arial, sans-serif";
+	ctx.fillStyle = "white";
+	ctx.fillText("lives: "+x5, 20, 25);
+	//Version
+	ctx.font = "italic small-caps bold 10px Helvetica, Arial, sans-serif";
+	ctx.fillStyle = "white";
+	ctx.fillText("v:" +hv +"." +nv  , 860, 488);
+	//Creator 
+	ctx.font = "italic small-caps bold 10px Helvetica, Arial, sans-serif";
+	ctx.fillStyle = "white";
+	ctx.fillText("Cr:"+na1 +"/" +na2 , 860, 496);
+	//hit counter
+	ctx.font = "italic small-caps bold 30px Helvetica, Arial, sans-serif";
+	ctx.fillStyle = "white";
+	ctx.fillText("hits: "+l, 780, 25);
+	//Game Over 
+	if(x5<1){
+	ctx.font = "italic small-caps bold 50px Helvetica, Arial, sans-serif";
+	ctx.fillStyle = "white";
+	ctx.fillText("GAME OVER", 290, 250);
+	}
+
+	
+}
+
+function timer()
+{
+	var ele = document.getElementById("background");
+
+
+	// ref_time define Ship spawn rate 
+	if (Date.now() - ref_time >= 5000)
+	{
+		//create mList
+		var pos_y = Math.floor(Math.random() * ele.height); 
+		
+		var o = new GraphObj(ele.width,pos_y,60,h2); 
+		mList.push(o);
+		
+		ref_time = Date.now();
+	}
+
+
+	for (var i=0; i<mList.length; i++)
+	{
+		mList[i].x -= 1; // geschw. des Gengners (mList)
+	}
+	for (var i=0; i<tList.length; i++)
+	{
+		tList[i].x += 1; // geschw. des Tropedos (tList)
+	}
+
+
+	hit();
+	
+	main();
+
+	volume();
+
+	lose();
+	
+	// make the game more fluent	
+	requestAnimationFrame(timer);
+	
+}
+
+
+// if Torpeodo hits Ship(Gegner), Ship(Gegner) dies and you get an hit 
+function hit()
+{
+	
+	for(var i=0; i<tList.length; i++){
+
+		for(var z=0; z<mList.length;z++){
+
+			if(almostEqual(tList[i].x+10,mList[z].x)&&tList[i].y<=mList[z].y+h2&&tList[i].y>=mList[z].y){
+				//if(tList[i].x+10==mList[z].x&&tList[i].y<=mList[z].y+h2&&tList[i].y>=mList[z].y){
+
+				tList.splice(tList[i],1);	// hier wird der Torpedo bei einem hit gelöscht 
+				mList.splice(mList[z],1);	// hier wird der gegner bei einem hit gelöscht 
+				l=l+1 // with every hit 1 point is added to the hit counter
+				
+			}
+		}
+	}
+}
+ function almostEqual(a,b){
+
+	return Math.abs(a-b)<0.01;
+
+ }
+
+//If Ship (Gegner) flies behind your Ship (Player), then you lose a life
+function lose()
+{
+
+	for(var v=0;v<mList.length;v++){
+		
+		if(mList[v].x<=1){
+
+			x5=x5-1; // x5 def. Lives, each time an opponent gets through one live is taken from you
+
+			mList.splice(mList[v],1);
+			
+		}
+	}
+}
+
+function volume(){
+// function set Volmume from "Schuss" to 10%
+ var aud1=document.getElementById("Schuss"); 
+	 aud1.volume=0.1;
+// function set Volume from "Background Music to 8%"	 
+ var aud2=document.getElementById("Backgroundmc1");
+	 aud2.volume=0.08;
+}
+
+
+function keypress_1(e) // moving, sounds
+{
+//keyboard
+	console.log('key press:' + e.code);
+	if (e.code == "KeyW"){
+		y += -5;
+		
+	}
+	else if (e.code == "KeyS")
+		y += 5; 
+	else if (e.code == "Space")
+	{
+		var o = new GraphObj(70,y-33,10,h1); // create new Torpedo (tList)
+		tList.push(o);
+
+		//Torpedo sound
+		var aud1=document.getElementById("Schuss");
+		aud1.play();
+	}
+		// background Music
+		if(p==1)
+		{
+			var aud2=document.getElementById("Backgroundmc1");
+ 			aud2.loop=true; 
+ 			aud2.play();
+		}
+		
+}	
+	 
+function start() {
+
+	mList = new Array();
+	tList = new Array();
+	
+	var c = document.getElementById("background");
+	c.setAttribute('tabindex','0');
+	c.focus();
+	
+	c.addEventListener('keypress', keypress_1, false);
+	
+	y = c.height - 230;
+	x = c.width / 60;
+
+	p=1; //If P is 1 there is a background sound, if P is 0 there is none
+	main();
+	requestAnimationFrame(timer); // draw everything BEFORE screen update
+	
+}
+
+function Reload(){      //function for reload button
+    location.reload();  //reload the page with location.reload();
+}
+</script>
+</head>
+<body>
+
+	<img id="Player" src="img-aud/Player2.png" style="display:none;">
+	<img id="bg" src="img-aud/Backgrond-World1.jpg" style="display:none;">
+	<img id="ship" src="img-aud/Ship4.png" style="display:none;">
+	
+	<audio preload id="Schuss">
+		<source src="img-aud/Schuss.mp3" type="audio/mpeg">
+	</audio>
+	<audio preload id="Backgroundmc1">
+		<source  src="img-aud/backgroundmc.mp3" type="audio/mpeg">
+	</audio>
+	
+	<button onclick="start()">Start/Speed</button>
+	<button onclick="Reload()">Reload</button>
+	
+	<h1> Shoot the Ship </h1>
+
+	<div>
+	<canvas id="background" width= "900" height= "500"> </canvas>
+	</div>
+
+</body>
+</html>
